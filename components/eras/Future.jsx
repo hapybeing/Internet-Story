@@ -1,8 +1,12 @@
 'use client'
 
-import { useRef, useEffect, useLayoutEffect } from 'react'
-import * as THREE from 'three'
-import { gsap, ScrollTrigger } from '@/lib/gsap-config'
+// This component is loaded via next/dynamic with ssr:false in page.jsx.
+// Three.js is imported inside useEffect (browser-only) as an extra safety
+// layer — even if this file were somehow server-rendered, THREE would
+// never execute at module level.
+
+import { useRef, useEffect, useLayoutEffect, useState } from 'react'
+import { gsap } from '@/lib/gsap-config'
 
 const AI_AGENTS = [
   {
@@ -26,10 +30,10 @@ const AI_AGENTS = [
 ]
 
 const SIGNALS = [
-  { year: '2025', event: 'AI AGENTS REPLACE SAAS', desc: 'Autonomous agents manage entire workflows end-to-end'            },
-  { year: '2027', event: 'NEURAL BROWSING BETA',   desc: 'First 10,000 users navigate the web via direct thought'          },
-  { year: '2030', event: 'SPATIAL WEB DOMINANT',   desc: '3D internet becomes default protocol. 2D sites archived'         },
-  { year: '2035', event: 'COLLECTIVE MIND LAYER',  desc: 'Human and AI cognition merge into shared planetary intelligence'  },
+  { year: '2025', event: 'AI AGENTS REPLACE SAAS', desc: 'Autonomous agents manage entire workflows end-to-end'           },
+  { year: '2027', event: 'NEURAL BROWSING BETA',   desc: 'First 10,000 users navigate the web via direct thought'         },
+  { year: '2030', event: 'SPATIAL WEB DOMINANT',   desc: '3D internet becomes default protocol. 2D sites archived'        },
+  { year: '2035', event: 'COLLECTIVE MIND LAYER',  desc: 'Human and AI cognition merge into shared planetary intelligence' },
 ]
 
 const NEURAL_STATS = [
@@ -49,153 +53,183 @@ export default function Future() {
   const statusRef   = useRef(null)
   const agentRefs   = useRef([])
   const signalRefs  = useRef([])
+  const [webglSupported, setWebglSupported] = useState(true)
 
-  // Three.js — only touches the canvas
+  // ── Three.js ─────────────────────────────────────────────────────────
+  // Dynamically imported inside useEffect so it NEVER runs on the server.
   useEffect(() => {
+    if (typeof window === 'undefined') return
     const canvas = canvasRef.current
-    if (!canvas || typeof window === 'undefined') return
+    if (!canvas) return
 
-    const W = window.innerWidth
-    const H = window.innerHeight
-
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })
-    renderer.setSize(W, H)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    renderer.setClearColor(0x000000, 0)
-
-    const scene  = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(65, W / H, 0.1, 1000)
-    camera.position.z = 55
-
-    const NODE_COUNT = 80
-    const nodePos    = []
-    const posArr     = new Float32Array(NODE_COUNT * 3)
-
-    for (let i = 0; i < NODE_COUNT; i++) {
-      const x = (Math.random() - 0.5) * 90
-      const y = (Math.random() - 0.5) * 65
-      const z = (Math.random() - 0.5) * 45
-      posArr[i * 3] = x; posArr[i * 3 + 1] = y; posArr[i * 3 + 2] = z
-      nodePos.push(new THREE.Vector3(x, y, z))
+    // WebGL support check — graceful fallback
+    const testCtx = canvas.getContext('webgl2') || canvas.getContext('webgl')
+    if (!testCtx) {
+      setWebglSupported(false)
+      return
     }
 
-    const nodeGeom = new THREE.BufferGeometry()
-    nodeGeom.setAttribute('position', new THREE.BufferAttribute(posArr, 3))
-    const nodeMat  = new THREE.PointsMaterial({ color: 0x00d4ff, size: 0.55, transparent: true, opacity: 0.65, sizeAttenuation: true })
-    const nodeMesh = new THREE.Points(nodeGeom, nodeMat)
+    let frameId
+    let renderer, scene, camera, group, nodeMat, activeMat
 
-    const ACTIVE    = 10
-    const picked    = Array.from({ length: NODE_COUNT }, (_, k) => k).sort(() => Math.random() - 0.5).slice(0, ACTIVE)
-    const activeArr = new Float32Array(ACTIVE * 3)
-    picked.forEach((idx, j) => { activeArr[j*3]=nodePos[idx].x; activeArr[j*3+1]=nodePos[idx].y; activeArr[j*3+2]=nodePos[idx].z })
-    const activeGeom = new THREE.BufferGeometry()
-    activeGeom.setAttribute('position', new THREE.BufferAttribute(activeArr, 3))
-    const activeMat  = new THREE.PointsMaterial({ color: 0xffffff, size: 1.4, transparent: true, opacity: 0.9, sizeAttenuation: true })
-    const activeMesh = new THREE.Points(activeGeom, activeMat)
+    import('three').then((THREE) => {
+      const W = window.innerWidth
+      const H = window.innerHeight
 
-    const THRESHOLD = 16
-    const lineVerts = []
-    for (let i = 0; i < NODE_COUNT; i++) {
-      for (let j = i + 1; j < NODE_COUNT; j++) {
-        if (nodePos[i].distanceTo(nodePos[j]) < THRESHOLD) {
-          lineVerts.push(nodePos[i].x, nodePos[i].y, nodePos[i].z, nodePos[j].x, nodePos[j].y, nodePos[j].z)
+      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true })
+      renderer.setSize(W, H)
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+      renderer.setClearColor(0x000000, 0)
+
+      scene  = new THREE.Scene()
+      camera = new THREE.PerspectiveCamera(65, W / H, 0.1, 1000)
+      camera.position.z = 55
+
+      const NODE_COUNT = 80
+      const nodePos    = []
+      const posArr     = new Float32Array(NODE_COUNT * 3)
+
+      for (let i = 0; i < NODE_COUNT; i++) {
+        const x = (Math.random() - 0.5) * 90
+        const y = (Math.random() - 0.5) * 65
+        const z = (Math.random() - 0.5) * 45
+        posArr[i * 3] = x; posArr[i * 3 + 1] = y; posArr[i * 3 + 2] = z
+        nodePos.push(new THREE.Vector3(x, y, z))
+      }
+
+      const nodeGeom = new THREE.BufferGeometry()
+      nodeGeom.setAttribute('position', new THREE.BufferAttribute(posArr, 3))
+      nodeMat = new THREE.PointsMaterial({ color: 0x00d4ff, size: 0.55, transparent: true, opacity: 0.65, sizeAttenuation: true })
+      const nodeMesh = new THREE.Points(nodeGeom, nodeMat)
+
+      const ACTIVE    = 10
+      const picked    = Array.from({ length: NODE_COUNT }, (_, k) => k).sort(() => Math.random() - 0.5).slice(0, ACTIVE)
+      const activeArr = new Float32Array(ACTIVE * 3)
+      picked.forEach((idx, j) => { activeArr[j*3]=nodePos[idx].x; activeArr[j*3+1]=nodePos[idx].y; activeArr[j*3+2]=nodePos[idx].z })
+      const activeGeom = new THREE.BufferGeometry()
+      activeGeom.setAttribute('position', new THREE.BufferAttribute(activeArr, 3))
+      activeMat = new THREE.PointsMaterial({ color: 0xffffff, size: 1.4, transparent: true, opacity: 0.9, sizeAttenuation: true })
+      const activeMesh = new THREE.Points(activeGeom, activeMat)
+
+      const THRESHOLD = 16
+      const lineVerts = []
+      for (let i = 0; i < NODE_COUNT; i++) {
+        for (let j = i + 1; j < NODE_COUNT; j++) {
+          if (nodePos[i].distanceTo(nodePos[j]) < THRESHOLD) {
+            lineVerts.push(nodePos[i].x, nodePos[i].y, nodePos[i].z, nodePos[j].x, nodePos[j].y, nodePos[j].z)
+          }
         }
       }
-    }
-    const lineGeom  = new THREE.BufferGeometry()
-    lineGeom.setAttribute('position', new THREE.Float32BufferAttribute(lineVerts, 3))
-    const lineMat   = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.09 })
-    const linesMesh = new THREE.LineSegments(lineGeom, lineMat)
+      const lineGeom  = new THREE.BufferGeometry()
+      lineGeom.setAttribute('position', new THREE.Float32BufferAttribute(lineVerts, 3))
+      const lineMat   = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.09 })
+      const linesMesh = new THREE.LineSegments(lineGeom, lineMat)
 
-    const group = new THREE.Group()
-    group.add(nodeMesh, activeMesh, linesMesh)
-    scene.add(group)
+      group = new THREE.Group()
+      group.add(nodeMesh, activeMesh, linesMesh)
+      scene.add(group)
 
-    let frameId, t = 0
-    const animate = () => {
-      frameId = requestAnimationFrame(animate)
-      t += 0.004
-      group.rotation.y  += 0.0012
-      group.rotation.x   = Math.sin(t * 0.25) * 0.07
-      nodeMat.opacity    = 0.5  + Math.sin(t * 1.2)     * 0.18
-      activeMat.opacity  = 0.7  + Math.sin(t * 2.2 + 1) * 0.22
-      renderer.render(scene, camera)
-    }
-    animate()
+      let t = 0
+      const animate = () => {
+        frameId = requestAnimationFrame(animate)
+        t += 0.004
+        group.rotation.y  += 0.0012
+        group.rotation.x   = Math.sin(t * 0.25) * 0.07
+        nodeMat.opacity    = 0.5  + Math.sin(t * 1.2)     * 0.18
+        activeMat.opacity  = 0.7  + Math.sin(t * 2.2 + 1) * 0.22
+        renderer.render(scene, camera)
+      }
+      animate()
 
-    const onResize = () => {
-      const w = window.innerWidth, h = window.innerHeight
-      renderer.setSize(w, h)
-      camera.aspect = w / h
-      camera.updateProjectionMatrix()
-    }
-    window.addEventListener('resize', onResize)
+      const onResize = () => {
+        const w = window.innerWidth, h = window.innerHeight
+        renderer.setSize(w, h)
+        camera.aspect = w / h
+        camera.updateProjectionMatrix()
+      }
+      window.addEventListener('resize', onResize)
+
+      // Cleanup stored on the canvas element so the return closure can reach it
+      canvas._cleanup = () => {
+        cancelAnimationFrame(frameId)
+        window.removeEventListener('resize', onResize)
+        nodeGeom.dispose(); nodeMat.dispose()
+        activeGeom.dispose(); activeMat.dispose()
+        lineGeom.dispose(); lineMat.dispose()
+        renderer.dispose()
+      }
+    }).catch((err) => {
+      console.warn('Three.js failed to load:', err)
+      setWebglSupported(false)
+    })
 
     return () => {
-      cancelAnimationFrame(frameId)
-      window.removeEventListener('resize', onResize)
-      nodeGeom.dispose(); nodeMat.dispose()
-      activeGeom.dispose(); activeMat.dispose()
-      lineGeom.dispose(); lineMat.dispose()
-      renderer.dispose()
+      if (canvas._cleanup) canvas._cleanup()
     }
   }, [])
 
-  // GSAP — only touches HTML elements
+  // ── GSAP — only touches HTML elements, never the canvas ──────────────
   useLayoutEffect(() => {
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top top',
-          end: '+=350%',
-          scrub: 1.8,
-          pin: true,
-          anticipatePin: 1,
-          onEnter:     () => window.dispatchEvent(new CustomEvent('era-change', { detail: { eraIndex: 4 } })),
-          onEnterBack: () => window.dispatchEvent(new CustomEvent('era-change', { detail: { eraIndex: 4 } })),
-          // No onLeave — this is the final section
-        },
-      })
+    if (typeof window === 'undefined') return
 
-      // Ongoing ambience — outside scrub timeline intentionally
-      gsap.fromTo(
-        scanLineRef.current,
-        { y: -2 },
-        { y: window.innerHeight + 2, duration: 5, ease: 'none', repeat: -1 }
-      )
+    // Import ScrollTrigger locally — it's already registered via gsap-config
+    // but we need the reference here for the scrollTrigger config
+    import('gsap/ScrollTrigger').then(({ ScrollTrigger }) => {
+      const ctx = gsap.context(() => {
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top top',
+            end: '+=350%',
+            scrub: 1.8,
+            pin: true,
+            anticipatePin: 1,
+            onEnter:     () => window.dispatchEvent(new CustomEvent('era-change', { detail: { eraIndex: 4 } })),
+            onEnterBack: () => window.dispatchEvent(new CustomEvent('era-change', { detail: { eraIndex: 4 } })),
+          },
+        })
 
-      gsap.to('.future-pulse-dot', {
-        opacity: 0.2,
-        duration: 1.1,
-        ease: 'power1.inOut',
-        yoyo: true,
-        repeat: -1,
-        stagger: { amount: 1.6 },
-      })
+        // Scan line — ongoing ambience outside the scrub timeline
+        if (scanLineRef.current) {
+          gsap.fromTo(
+            scanLineRef.current,
+            { y: -2 },
+            { y: window.innerHeight + 2, duration: 5, ease: 'none', repeat: -1 }
+          )
+        }
 
-      tl.from(subtitleRef.current, { opacity: 0, letterSpacing: '1.5em', duration: 0.5 }, 0)
-      tl.fromTo(
-        titleRef.current,
-        { clipPath: 'inset(0 100% 0 0)', WebkitClipPath: 'inset(0 100% 0 0)' },
-        { clipPath: 'inset(0 0% 0 0)',   WebkitClipPath: 'inset(0 0% 0 0)', duration: 0.7, ease: 'power3.inOut' },
-        0.25
-      )
-      tl.from(taglineRef.current, { opacity: 0, y: 10, duration: 0.4 }, 0.8)
-      tl.from(statsRef.current,   { opacity: 0, y: 14, duration: 0.4 }, 0.95)
-      tl.from(statusRef.current,  { opacity: 0, duration: 0.4 }, 1.1)
+        gsap.to('.future-pulse-dot', {
+          opacity: 0.2,
+          duration: 1.1,
+          ease: 'power1.inOut',
+          yoyo: true,
+          repeat: -1,
+          stagger: { amount: 1.6 },
+        })
 
-      agentRefs.current.forEach((el, i) => {
-        if (!el) return
-        tl.from(el, { opacity: 0, y: 36, scale: 0.95, duration: 0.55, ease: 'power3.out' }, 1.2 + i * 0.25)
-      })
-      signalRefs.current.forEach((el, i) => {
-        if (!el) return
-        tl.from(el, { opacity: 0, x: 20, duration: 0.35, ease: 'power2.out' }, 1.5 + i * 0.14)
-      })
-    }, sectionRef)
+        tl.from(subtitleRef.current, { opacity: 0, letterSpacing: '1.5em', duration: 0.5 }, 0)
+        tl.fromTo(
+          titleRef.current,
+          { clipPath: 'inset(0 100% 0 0)', WebkitClipPath: 'inset(0 100% 0 0)' },
+          { clipPath: 'inset(0 0% 0 0)',   WebkitClipPath: 'inset(0 0% 0 0)', duration: 0.7, ease: 'power3.inOut' },
+          0.25
+        )
+        tl.from(taglineRef.current, { opacity: 0, y: 10, duration: 0.4 }, 0.8)
+        tl.from(statsRef.current,   { opacity: 0, y: 14, duration: 0.4 }, 0.95)
+        tl.from(statusRef.current,  { opacity: 0, duration: 0.4 }, 1.1)
 
-    return () => ctx.revert()
+        agentRefs.current.forEach((el, i) => {
+          if (!el) return
+          tl.from(el, { opacity: 0, y: 36, scale: 0.95, duration: 0.55, ease: 'power3.out' }, 1.2 + i * 0.25)
+        })
+        signalRefs.current.forEach((el, i) => {
+          if (!el) return
+          tl.from(el, { opacity: 0, x: 20, duration: 0.35, ease: 'power2.out' }, 1.5 + i * 0.14)
+        })
+      }, sectionRef)
+
+      return () => ctx.revert()
+    })
   }, [])
 
   return (
@@ -205,7 +239,24 @@ export default function Future() {
       className="relative w-full h-screen overflow-hidden"
       style={{ background: '#00040a' }}
     >
-      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2 }} />
+      {/* Three.js canvas — pointer-events:none critical to not eat scroll */}
+      <canvas
+        ref={canvasRef}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 2 }}
+      />
+
+      {/* WebGL fallback — static neural grid when WebGL unavailable */}
+      {!webglSupported && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            zIndex: 2,
+            backgroundImage:
+              'radial-gradient(circle, rgba(0,212,255,0.15) 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }}
+        />
+      )}
 
       <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 1, backgroundImage: 'linear-gradient(rgba(0,212,255,0.035) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.035) 1px,transparent 1px)', backgroundSize: '60px 60px' }} />
       <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 3, background: 'radial-gradient(ellipse 80% 70% at 50% 50%, transparent 30%, rgba(0,4,10,0.7) 100%)' }} />
@@ -265,7 +316,7 @@ export default function Future() {
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: `linear-gradient(to right,transparent,${agent.color}60,transparent)`, pointerEvents: 'none' }} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
                   <div style={{ fontFamily: 'var(--font-orbitron)', fontWeight: '900', fontSize: 'clamp(14px,1.8vw,20px)', color: agent.color, textShadow: `0 0 18px ${agent.color}50`, lineHeight: 1 }}>{agent.id}</div>
-                  <div style={{ fontFamily: 'var(--font-orbitron)', fontSize: 'clamp(6px,0.65vw,8px)', color: `${agent.color}80`, letterSpacing: '0.12em', lineHeight: 1 }}>{agent.version}</div>
+                  <div style={{ fontFamily: 'var(--font-orbitron)', fontSize: 'clamp(6px,0.65vw,8px)', color: `${agent.color}80`, letterSpacing: '0.12em' }}>{agent.version}</div>
                   <div style={{ marginLeft: 'auto', fontFamily: 'var(--font-outfit)', fontSize: 'clamp(8px,0.85vw,11px)', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic' }}>{agent.subtitle}</div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px' }}>
