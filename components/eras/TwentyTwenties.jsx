@@ -1,21 +1,21 @@
 'use client'
 
 import { useRef, useLayoutEffect } from 'react'
-import { gsap, ScrollTrigger } from '@/lib/gsap-config'
+import { gsap } from '@/lib/gsap-config'
 
 const CHAT_MESSAGES = [
-  { role: 'ai',   text: 'Good morning. 3 priority items flagged.'         },
-  { role: 'user', text: 'Summarize the important one.'                     },
+  { role: 'ai',   text: 'Good morning. 3 priority items flagged.'              },
+  { role: 'user', text: 'Summarize the important one.'                          },
   { role: 'ai',   text: 'Board meeting moved to Thursday. Deck needs updating.' },
-  { role: 'user', text: 'Draft an agenda.'                                 },
-  { role: 'ai',   text: 'Done — 6 items, 45 min. Want me to send it?'     },
+  { role: 'user', text: 'Draft an agenda.'                                      },
+  { role: 'ai',   text: 'Done — 6 items, 45 min. Want me to send it?'          },
 ]
 
 const MILESTONES = [
-  { year: '2020', event: 'EVERYTHING REMOTE',  color: 'rgba(167,139,250,0.9)', desc: 'COVID forces the entire world online. Zoom becomes a verb'  },
-  { year: '2021', event: 'NFT MANIA',          color: 'rgba(251,191,36,0.9)',  desc: 'Beeple sells a $69M JPEG. Everyone mints everything'         },
-  { year: '2022', event: 'CHATGPT',            color: 'rgba(52,211,153,0.9)',  desc: '100M users in 60 days — fastest growing app in history'      },
-  { year: '2023', event: 'AI REVOLUTION',      color: 'rgba(99,102,241,0.9)',  desc: 'GPT-4, Midjourney, Sora. Creative work transformed forever'  },
+  { year: '2020', event: 'EVERYTHING REMOTE',  color: 'rgba(167,139,250,0.9)', desc: 'COVID forces the entire world online. Zoom becomes a verb'    },
+  { year: '2021', event: 'NFT MANIA',          color: 'rgba(251,191,36,0.9)',  desc: 'Beeple sells a $69M JPEG. Everyone mints everything'           },
+  { year: '2022', event: 'CHATGPT',            color: 'rgba(52,211,153,0.9)',  desc: '100M users in 60 days — fastest growing app in history'        },
+  { year: '2023', event: 'AI REVOLUTION',      color: 'rgba(99,102,241,0.9)',  desc: 'GPT-4, Midjourney, Sora. Creative work transformed forever'    },
   { year: '2024', event: 'SPATIAL ERA',        color: 'rgba(244,114,182,0.9)', desc: 'Apple Vision Pro ships. The internet becomes three-dimensional' },
 ]
 
@@ -47,6 +47,7 @@ export default function TwentyTwenties() {
           onEnter:     () => window.dispatchEvent(new CustomEvent('era-change', { detail: { eraIndex: 3 } })),
           onEnterBack: () => window.dispatchEvent(new CustomEvent('era-change', { detail: { eraIndex: 3 } })),
           onLeave:     () => window.dispatchEvent(new CustomEvent('era-transition-3-4')),
+          onLeaveBack: () => window.dispatchEvent(new CustomEvent('era-transition-2-3')),
         },
       })
 
@@ -85,6 +86,7 @@ export default function TwentyTwenties() {
       <div className="era-watermark" style={{ fontFamily: 'var(--font-outfit)', color: '#a78bfa', fontWeight: 900 }}>2020s</div>
 
       <div className="relative h-full grid" style={{ gridTemplateColumns: '1fr 1fr', zIndex: 10, alignItems: 'center' }}>
+
         {/* LEFT */}
         <div className="flex flex-col justify-center" style={{ padding: 'clamp(24px,5vw,64px) clamp(16px,4vw,48px)' }}>
           <div ref={subtitleRef} style={{ fontFamily: 'var(--font-outfit)', fontSize: 'clamp(9px,1vw,12px)', letterSpacing: '0.35em', color: 'rgba(167,139,250,0.6)', marginBottom: '16px', textTransform: 'uppercase', fontWeight: '600' }}>
@@ -130,6 +132,7 @@ export default function TwentyTwenties() {
           <div style={{ fontFamily: 'var(--font-outfit)', fontWeight: '700', fontSize: 'clamp(8px,0.9vw,11px)', color: 'rgba(255,255,255,0.2)', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '14px' }}>
             Decade Milestones
           </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {MILESTONES.map((m, i) => (
               <div key={m.year} ref={el => (milestoneRefs.current[i] = el)} className="glass-card" style={{ display: 'flex', overflow: 'hidden', padding: 0, borderRadius: '10px' }}>
