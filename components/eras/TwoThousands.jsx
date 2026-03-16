@@ -7,20 +7,20 @@ import MySpace     from '@/components/artifacts/MySpace'
 import iPhone2007  from '@/components/artifacts/iPhone2007'
 
 const AIM_BUDDIES = [
-  { name: 'xX_DarkKnight_Xx', status: 'online', msg: 'chillin lol'            },
-  { name: 'sk8rboi_2003',      status: 'away',   msg: 'at skool :('            },
+  { name: 'xX_DarkKnight_Xx', status: 'online', msg: 'chillin lol'             },
+  { name: 'sk8rboi_2003',      status: 'away',   msg: 'at skool :('             },
   { name: 'PunkRocker99',      status: 'online', msg: 'listening 2 linkin park' },
-  { name: 'CoolGirl4Life',     status: 'online', msg: '~*~butterfly~*~'        },
-  { name: 'GamerzRule_Dave',   status: 'away',   msg: 'zzz'                    },
+  { name: 'CoolGirl4Life',     status: 'online', msg: '~*~butterfly~*~'         },
+  { name: 'GamerzRule_Dave',   status: 'away',   msg: 'zzz'                     },
 ]
 
 const MILESTONES = [
-  { year: '2001', event: 'WIKIPEDIA', desc: 'Free encyclopedia launched; anyone can edit anything'         },
-  { year: '2003', event: 'MYSPACE',   desc: 'Social networking goes mainstream. Glitter GIFs reign'        },
-  { year: '2004', event: 'FACEBOOK',  desc: 'Zuckerberg launches "thefacebook" from his Harvard dorm'      },
-  { year: '2005', event: 'YOUTUBE',   desc: '"Me at the zoo." First video. The world changes forever'       },
-  { year: '2007', event: 'iPHONE',    desc: 'Jobs: "an iPod, a phone, and an internet communicator"'       },
-  { year: '2008', event: 'BITCOIN',   desc: 'Satoshi Nakamoto publishes the Bitcoin whitepaper'            },
+  { year: '2001', event: 'WIKIPEDIA', desc: 'Free encyclopedia launched; anyone can edit anything'          },
+  { year: '2003', event: 'MYSPACE',   desc: 'Social networking goes mainstream. Glitter GIFs reign'         },
+  { year: '2004', event: 'FACEBOOK',  desc: 'Zuckerberg launches "thefacebook" from his Harvard dorm'       },
+  { year: '2005', event: 'YOUTUBE',   desc: '"Me at the zoo." First video. The world changes forever'        },
+  { year: '2007', event: 'iPHONE',    desc: 'Jobs: "an iPod, a phone, and an internet communicator"'        },
+  { year: '2008', event: 'BITCOIN',   desc: 'Satoshi Nakamoto publishes the Bitcoin whitepaper'             },
 ]
 
 const ARTIFACTS = [
@@ -67,9 +67,10 @@ export default function TwoThousands() {
           scrub: 1.8,
           pin: true,
           anticipatePin: 1,
-          onEnter:     () => window.dispatchEvent(new CustomEvent('era-change', { detail: { eraIndex: 1 } })),
-          onEnterBack: () => window.dispatchEvent(new CustomEvent('era-change', { detail: { eraIndex: 1 } })),
-          onLeave:     () => window.dispatchEvent(new CustomEvent('era-transition-1-2')),
+          onEnter:      () => window.dispatchEvent(new CustomEvent('era-change', { detail: { eraIndex: 1 } })),
+          onEnterBack:  () => window.dispatchEvent(new CustomEvent('era-change', { detail: { eraIndex: 1 } })),
+          onLeave:      () => window.dispatchEvent(new CustomEvent('era-transition-1-2')),
+          onLeaveBack:  () => window.dispatchEvent(new CustomEvent('era-transition-0-1')),
         },
       })
 
@@ -140,7 +141,7 @@ export default function TwoThousands() {
               <button
                 key={a.id}
                 onClick={() => openArtifact(a.id)}
-                style={{ alignSelf: 'flex-start', fontFamily: 'Arial, sans-serif', fontSize: 'clamp(9px,0.9vw,11px)', fontWeight: 'bold', color: a.color, background: 'transparent', border: `1px solid ${a.color}55`, padding: '6px 12px', cursor: 'pointer', letterSpacing: '0.06em', transition: 'background 0.2s, border-color 0.2s', borderRadius: '2px' }}
+                style={{ alignSelf: 'flex-start', fontFamily: 'Arial, sans-serif', fontSize: 'clamp(9px,0.9vw,11px)', fontWeight: 'bold', color: a.color, background: 'transparent', border: `1px solid ${a.color}55`, padding: '6px 12px', cursor: 'pointer', letterSpacing: '0.06em', transition: 'background 0.2s,border-color 0.2s', borderRadius: '2px' }}
                 onMouseEnter={e => { e.currentTarget.style.background = `${a.color}15`; e.currentTarget.style.borderColor = a.color }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = `${a.color}55` }}
               >
