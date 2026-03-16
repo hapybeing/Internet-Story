@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useLayoutEffect } from 'react'
-import { gsap, ScrollTrigger } from '@/lib/gsap-config'
+import { gsap } from '@/lib/gsap-config'
 
 const APPS = [
   { name: 'Instagram', bg: 'linear-gradient(45deg,#f09433,#dc2743,#bc1888)', emoji: '📸' },
@@ -25,8 +25,8 @@ const MILESTONES = [
 ]
 
 const STATS = [
-  { value: '3.5B', label: 'Social users'  },
-  { value: '4.5B', label: 'Smartphones'   },
+  { value: '3.5B', label: 'Social users'   },
+  { value: '4.5B', label: 'Smartphones'    },
   { value: '3M+',  label: 'Apps in stores' },
 ]
 
@@ -51,6 +51,7 @@ export default function TwentyTens() {
           onEnter:     () => window.dispatchEvent(new CustomEvent('era-change', { detail: { eraIndex: 2 } })),
           onEnterBack: () => window.dispatchEvent(new CustomEvent('era-change', { detail: { eraIndex: 2 } })),
           onLeave:     () => window.dispatchEvent(new CustomEvent('era-transition-2-3')),
+          onLeaveBack: () => window.dispatchEvent(new CustomEvent('era-transition-1-2')),
         },
       })
 
@@ -84,6 +85,7 @@ export default function TwentyTens() {
       <div className="era-watermark" style={{ fontFamily: 'var(--font-outfit)', color: '#1a1a1a', fontWeight: 900 }}>2010s</div>
 
       <div className="relative h-full grid" style={{ gridTemplateColumns: '1fr 1fr', zIndex: 10 }}>
+
         {/* LEFT */}
         <div className="flex flex-col justify-center" style={{ padding: 'clamp(24px,5vw,64px) clamp(16px,4vw,48px)', borderRight: '1px solid rgba(0,0,0,0.05)' }}>
           <div ref={subtitleRef} style={{ fontFamily: 'var(--font-outfit)', fontSize: 'clamp(9px,1vw,12px)', letterSpacing: '0.35em', color: '#007AFF', marginBottom: '14px', textTransform: 'uppercase', fontWeight: '600' }}>
