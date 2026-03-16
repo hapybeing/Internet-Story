@@ -67,9 +67,10 @@ export default function Nineties() {
           scrub: 1.8,
           pin: true,
           anticipatePin: 1,
-          onEnter:     () => window.dispatchEvent(new CustomEvent('era-change', { detail: { eraIndex: 0 } })),
-          onEnterBack: () => window.dispatchEvent(new CustomEvent('era-change', { detail: { eraIndex: 0 } })),
-          onLeave:     () => window.dispatchEvent(new CustomEvent('era-transition-0-1')),
+          onEnter:      () => window.dispatchEvent(new CustomEvent('era-change', { detail: { eraIndex: 0 } })),
+          onEnterBack:  () => window.dispatchEvent(new CustomEvent('era-change', { detail: { eraIndex: 0 } })),
+          onLeave:      () => window.dispatchEvent(new CustomEvent('era-transition-0-1')),
+          // No onLeaveBack for era-0 — there is no previous era to transition back to
         },
       })
 
@@ -119,6 +120,7 @@ export default function Nineties() {
       <div className="era-watermark" style={{ fontFamily: 'var(--font-press-start)', color: '#00ff41' }}>1990s</div>
 
       <div className="relative h-full grid" style={{ gridTemplateColumns: '1fr 1fr', zIndex: 10 }}>
+
         {/* LEFT */}
         <div className="flex flex-col justify-center overflow-hidden" style={{ padding: 'clamp(24px,5vw,64px) clamp(16px,4vw,48px)' }}>
           <div ref={subtitleRef} style={{ fontFamily: 'var(--font-press-start)', fontSize: 'clamp(7px,0.9vw,11px)', color: 'rgba(0,255,65,0.55)', letterSpacing: '0.35em', marginBottom: '20px', textTransform: 'uppercase' }}>
