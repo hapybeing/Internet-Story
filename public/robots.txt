@@ -1,5 +1,5 @@
 User-agent: *
 Allow: /
 
-# Sitemap location (update with your actual Vercel deployment URL)
-# Sitemap: https://your-project.vercel.app/sitemap.xml
+# Sitemap location (https://internet-story.vercel.app/)
+# Sitemap: https://internet-story.vercel.app/
