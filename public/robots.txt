@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 
 # Sitemap location (https://internet-story.vercel.app/)
-# Sitemap: https://internet-story.vercel.app/
+# Sitemap: "https://internet-story.vercel.app/"
